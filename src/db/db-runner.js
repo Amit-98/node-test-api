@@ -1,6 +1,6 @@
 import {pool} from './db-connect.js';
 
-let query, SelectS, SelectM, InsertQuery, Updatequery, Deletequery, InsertQueryErrorLog;
+let query, SelectS, SelectM, InsertQuery, Updatequery, Deletequery, InsertQueryErrorLog, selectS, insert;
 
 const sql = pool;
 
@@ -16,41 +16,46 @@ query = (_query, params = []) => {
     });
 };
 
-SelectS = (_query, cb) =>{
-    sql.query(_query, (err, result) => 
-    {
-        if(err)
+insert = (_query, params = []) => {
+    return new Promise((resolve, reject) => {
+      sql.query(_query, params, (error, results) => {
+        if (error)
         {
-            return cb (err);
-        }
-        else if(result && result.length > 0) 
-        {
-            return cb(null, result);
+          return reject(error);
         }
         else
         {
-            return cb(null, null);
+            if (results && results.insertId)
+            {
+                results = { insertId: results.insertId };
+                resolve(results);
+            }
+            else
+            {
+                results = {};
+                resolve(results);
+            }
         }
+    });
     });
 };
 
-SelectM = (_query, cb) =>{
-    sql.query(_query, (err, result) =>
-    {
-        if(err)
+selectS = (_query, params = []) => {
+    return new Promise((resolve, reject) => {
+      sql.query(_query, params, (error, results) => {
+        if (error)
         {
-            return cb (err);
-        }
-        else if(result && result.length > 0) 
-        {
-            return cb(null, result);
+          return reject(error);
         }
         else
         {
-            return cb(null, null);
+            results = results[0];
+            resolve(results);
         }
+      });
     });
 };
+
 
 InsertQuery = (_insertQuery, cb) =>
 {
@@ -134,6 +139,9 @@ InsertQueryErrorLog = (_insertQuery) =>
 
 export default {
     query,
+    insert,
+    selectS,
+
     SelectS,
     SelectM,
     InsertQuery,

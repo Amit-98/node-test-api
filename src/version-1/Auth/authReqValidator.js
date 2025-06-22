@@ -42,13 +42,8 @@ export default
         let { error } = schema.validate(body);
         if (error) 
         {
-            return next(resError(error, "Invalid data in request json."));
-            //return next(new Error("INVALID_KEY"));
-            // res.s = 1;
-            // res.m = "Record not found";
-            // res.r = {};
-            // return res.sendResult();
-        } 
+            next(resError(error, "Invalid data in request json."));
+        }
         else
         {
             next();

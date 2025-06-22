@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-//import Constant from "../constant.js";
-const jwt_code = "ATRYSGSF@#$WERW";
-const Api_key = 'FDGJMEFVIMEFC45643@#4FBGMKIOP';
+import constant from "../../common/constant.js";
+const jwt_code = constant.JWT_CODE;
+const Api_key = constant.API_KEY;
 
 let tokenCreate=(data)=>{
     return  jwt.sign(data, jwt_code, {

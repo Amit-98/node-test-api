@@ -5,12 +5,14 @@ import src from './src/index.js';
 import { PORT_CONFIG } from './src/db/env-config.js';
 import Response from "./src/common/response/index.js";
 import { ErrorMsg } from './src/common/index.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use(fileUpload({ createParentPath: true, limits: { fileSize: 50 * 1024 * 1024 }})); // 50 MB limit
 
 let errorHandler = (err, req, res, next) =>
@@ -88,6 +90,13 @@ app.use(
     methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"]
   })
 );
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files from public/upload directory
+app.use('/upload', express.static(path.join(__dirname, 'public/upload')));
 
 app.get('/', (req, res) => {
   res.send("Hello world API");

@@ -1,0 +1,4 @@
+export default{
+    JWT_CODE : "ATRYSGSF@#$WERW",
+    API_KEY : 'FDGJMEFVIMEFC45643@#4FBGMKIOP',
+}

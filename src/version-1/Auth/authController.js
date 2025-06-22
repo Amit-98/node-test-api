@@ -1,6 +1,7 @@
 //import _queryBuilder from "./authQueryBuilder.js";
 import _commonMethods from "../../common/commonMethods.js";
 import _queryHelper from "../../db/db-runner.js";
+import {jwt} from "../../common/index.js";
 //import _apiParams from "./authApiParams.js";
 const fileName = "authController.js";
 
@@ -8,9 +9,10 @@ let authSignup = async (req, res, next) =>
 {
     try
     {
-        let emailresult = await _queryHelper.query(`SELECT * FROM user WHERE email = ?`, [req.body.email]);
-        console.log("CHECK EMAIL:",emailresult.length);
-        if(emailresult.length > 0)
+        const {username, email, password } = req.body;
+        let emailresult = await _queryHelper.selectS(`SELECT * FROM user WHERE email = ?`, [email]);
+        //console.log("CHECK EMAIL:",emailresult);
+        if(emailresult)
         {
             res.s = 1;
             res.m = "Email already exist";
@@ -19,9 +21,10 @@ let authSignup = async (req, res, next) =>
         }
         else
         {
-            let instResult = await _queryHelper.query(`INSERT INTO user (username, email, password) VALUES (?,?,?)`,
-                [req.body.username, req.body.email,req.body.password]);
-            
+            const encPass = await _commonMethods.encPass(password);
+            let instResult = await _queryHelper.insert(`INSERT INTO user (username, email, password,status) VALUES (?,?,?,?)`,
+                [username, email, encPass, 1]
+            );
             if(instResult.insertId <= 0)
             {
                 res.s = 0;
@@ -31,8 +34,8 @@ let authSignup = async (req, res, next) =>
             }
             else
             {
-                let result = await _queryHelper.query(`SELECT * FROM user WHERE id = ?`, [instResult.insertId]);
-                if(result.length <= 0)
+                let result = await _queryHelper.selectS(`SELECT * FROM user WHERE id = ?`, [instResult.insertId]);
+                if(!result)
                 {
                     res.s = 0;
                     res.m = "Something went wrong";
@@ -41,13 +44,14 @@ let authSignup = async (req, res, next) =>
                 }
                 else
                 {
+                    let token = jwt.tokenCreate({id: result.id, email: result.email, username: result.username});
+                    result.token = token;
                     res.s = 1;
                     res.m = "Successfully registered";
-                    res.r = result[0];
+                    res.r = result;
                     return res.sendResult();
                 }
             }
-            
         }
     }
     catch (err)
@@ -61,45 +65,33 @@ let authLogin = async (req, res, next) =>
 {
     try
     {
-        const {password} = req.body;
-        const result = await _queryBuilder.authCheckEmail(req);
+        const {email, password} = req.body;
+        let result = await _queryHelper.selectS(`SELECT * FROM user WHERE email = ?`, [email]);
         if(result)
         {
-            const passCheck = _commonMethods.check_password(result.password, password);
-            if(passCheck)
+            // check Password:
+            const isPasswordValid = await _commonMethods.cmpPass(result.password, password);
+            if(!isPasswordValid)
             {
-                req.body.userId = result.id;
-                const resultAuthToken = await _queryBuilder.authTokenSuccess(req);
-                const resultRole = await _queryBuilder.authRoleSuccess(req);
-                if(resultAuthToken && resultRole)
-                {
-                    result.userAuthToken = resultAuthToken;
-                    result.userRole = resultRole;
-                    res.s = 1;
-                    res.m = "Login successfully";
-                    res.r = result;
-                    return res.sendResult();
-                }
-                else
-                {
-                    res.s = 0;
-                    res.m = "Please enter valid crendential";
-                    res.r = {};
-                    return res.sendResult();
-                }
+                res.s = 0;
+                res.m = "Invalid email or password";
+                res.r = {};
+                return res.sendResult();
             }
             else
             {
-                res.s = 0;
-                res.m = "Please enter valid crendential";
-                res.r = {};
+                let token = jwt.tokenCreate({id: result.id, email: result.email, username: result.username});
+                result.token = token;
+                res.s = 1;
+                res.m = "Login successfully";
+                res.r = result;
                 return res.sendResult();
             }
         }
         else
         {
             res.s = 0;
-            res.m = "Please enter valid crendential";
+            res.m = "Invalid email or password";
             res.r = {};
             return res.sendResult();
         }
@@ -111,7 +103,8 @@ let authLogin = async (req, res, next) =>
     }
 };
 
-export default {
+export default 
+{
     authSignup,
     authLogin
 }
