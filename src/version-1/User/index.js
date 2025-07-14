@@ -13,4 +13,9 @@ router.get("/getbyid",
     _controller.userGetById
 );
 
+router.post("/addcontact",
+    // _validator.userEdit,
+    _controller.userAddContact
+);
+
 export default router;

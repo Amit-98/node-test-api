@@ -1,8 +1,13 @@
 import {pool} from './db-connect.js';
+import {db_type} from './env-config.js';
+import mongoose from 'mongoose';
 
-let query, SelectS, SelectM, InsertQuery, Updatequery, Deletequery, InsertQueryErrorLog, selectS, insert;
+let query, insert, selectS, selectM, InsertQueryErrorLog;
 
 const sql = pool;
+
+if(db_type === 'mysql')
+{
 
 query = (_query, params = []) => {
     return new Promise((resolve, reject) => {
@@ -41,81 +46,34 @@ insert = (_query, params = []) => {
 };
 
 selectS = (_query, params = []) => {
-    return new Promise((resolve, reject) => {
-      sql.query(_query, params, (error, results) => {
-        if (error)
-        {
-          return reject(error);
-        }
-        else
-        {
-            results = results[0];
-            resolve(results);
-        }
-      });
-    });
-};
-
-
-InsertQuery = (_insertQuery, cb) =>
-{
-    sql.query(_insertQuery, (error, results, fields) =>
-    {
+  return new Promise((resolve, reject) => {
+    sql.query(_query, params, (error, results) => {
       if (error)
       {
-        return cb(error);
+        return reject(error);
       }
-      if (results != null)
+      else
       {
-        return cb(null, results);
-      }
-      else 
-      {
-        return cb(null, null);
+        results = results[0];
+        resolve(results);
       }
     });
+  });
 };
 
-Updatequery = (_updatequery, cb) =>
-{
-    sql.query(_updatequery, (error, results, fields) =>
-    {
-        if (error)
-        {
-            return cb(error);
-        }
-        if (results.length > 0) 
-        {
-            cb(null, results);
-        }
-        else
-        {
-            cb(null, results);
-        }
+selectM = (_query, params = []) => {
+  return new Promise((resolve, reject) => {
+    sql.query(_query, params, (error, results) => {
+      if (error)
+      {
+        return reject(error);
+      }
+      else
+      {
+        resolve(results);
+      }
     });
-};
-
-Deletequery = (_deletequery, cb) =>
-{
-    sql.query(_deletequery, (error, results, fields) =>
-    {
-        if (error) 
-        {
-            return cb(error);
-        }
-        if (results.length > 0)
-        {
-            cb(null, results);
-        }
-        if (results != null)
-        {
-            cb(null, results);
-        }
-        else
-        {
-            cb(null, null);
-        }
-    });
+  });
 };
 
 InsertQueryErrorLog = (_insertQuery) =>
@@ -137,15 +95,42 @@ InsertQueryErrorLog = (_insertQuery) =>
     });
 };
 
-export default {
-    query,
-    insert,
-    selectS,
+}
+else if(db_type === 'mongodb')
+{
+    // // MongoDB related code can be added here if needed
+    // query = () => {};
+    // insert = () => {};
+    // selectS = () => {};
+    // selectM = () => {};
+    // InsertQueryErrorLog = () => {};
 
-    SelectS,
-    SelectM,
-    InsertQuery,
-    Updatequery,
-    Deletequery,
-    InsertQueryErrorLog
+    query = (collection, filter, options, update, ) =>{
+
+    },
+
+  selectS = async (collection, filter, options) => 
+  {
+    console.log("COL",collection, "fil", filter, "opt", options);
+    const col = await pool.collection(collection); // Get collection reference
+    const cursor = await col.find(filter).toArray(); // Get cursor
+    if(cursor.length > 0)
+    { 
+      return cursor[0]; // Return first document
+    }
+    else
+    {
+      return null; // Return empty object if no document found
+    }
+  },
+  InsertQueryErrorLog = (_insertQuery) =>
+  {
+  };
+}
+export default {
+  query,
+  insert,
+  selectS,
+  selectM,
+  InsertQueryErrorLog
 }

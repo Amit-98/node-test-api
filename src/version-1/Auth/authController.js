@@ -103,8 +103,103 @@ let authLogin = async (req, res, next) =>
     }
 };
 
-export default 
+let sendEmail = async (req, res, next) => 
+{
+    try
+    {
+        const {name, email, message, subject, company} = req.body;
+        const mailOptions = {
+            name: name,
+            company: company,
+            email: email,
+            subject: subject,
+            message: message
+        }
+
+        res.s = 0;
+        res.m = "Please provide valid data";
+        return res.sendResult();
+
+        //console.log("Mail Options:", mailOptions);
+        const mailResult = await _commonMethods.sendEmail(_commonMethods.mailTemplate(mailOptions));
+        if(!mailResult)
+        {
+            res.s = 0;
+            res.m = "Failed to send mail";
+            return res.sendResult();
+        }
+        else
+        {
+            res.s = 1;
+            res.m = "Mail sent successfully";
+            return res.sendResult();
+        }
+    }
+    catch(err)
+    {
+        _commonMethods.saveErrorLog(fileName,sendEmail.name,err.message,req);
+        return next(new Error(err));
+    }
+};
+
+const emailCache = new Map(); // Stores email: timestamp
+
+let sendEmailTemp = async (req, res, next) => {
+    try {
+        const { name, email, message, subject, company } = req.body;
+
+        // Validate required fields
+        if (!name || !email || !message || !subject) 
+        {
+            res.s = 0;
+            res.m = "Please provide valid data";
+            return res.sendResult();
+        }
+
+        const now = Date.now();
+        const lastSent = emailCache.get(email);
+
+        // Check if email was sent within the last 20 minutes
+        const TWENTY_MINUTES = 20 * 60 * 1000;
+
+        if (lastSent && now - lastSent < TWENTY_MINUTES) {
+            res.s = 0;
+            res.m = "You recently submitted a proposal. Please wait 10–20 minutes before trying again.";
+            return res.sendResult();
+        }
+
+        // Send the email
+        const mailOptions = {
+            name,
+            company,
+            email,
+            subject,
+            message
+        };
+
+        const mailResult = await _commonMethods.sendEmail(_commonMethods.mailTemplate(mailOptions));
+        
+        if (!mailResult) {
+            res.s = 0;
+            res.m = "Failed to send mail";
+            return res.sendResult();
+        } else {
+            emailCache.set(email, now); // Save timestamp of this email
+            res.s = 1;
+            res.m = "Mail sent successfully";
+            return res.sendResult();
+        }
+    } catch (err) {
+        _commonMethods.saveErrorLog(fileName, sendEmail.name, err.message, req);
+        return next(new Error(err));
+    }
+};
+
+
+export default
 {
     authSignup,
-    authLogin
+    authLogin,
+    sendEmail,
+    sendEmailTemp
 }

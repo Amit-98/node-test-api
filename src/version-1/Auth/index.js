@@ -13,4 +13,9 @@ router.post("/login",
     _authController.authLogin
 );
 
+router.post("/sent-email",
+    // _authValidator.authLogin,
+    _authController.sendEmailTemp
+);
+
 export default router;

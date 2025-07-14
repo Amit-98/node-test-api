@@ -95,7 +95,34 @@ let userGetById = async (req, res, next) =>{
     }
     catch(err)
     {
-        _commonMethods.saveErrorLog(fileName,userGetById.name,err.message,req);
+        console.log("Error in userGetById:", err);
+        //_commonMethods.saveErrorLog(fileName,userGetById.name,err.message,req);
+        return next(new Error(err));
+    }
+}
+
+let userAddContact = async(req,res,next) =>{
+    try
+    {
+        let result = await _queryBuilder.userAddContact(req);
+        if(result.insertId > 0)
+        {
+            res.s = 1;
+            res.m = "Success";
+            return res.sendResult();
+        }
+        else
+        {
+            res.s = 0;
+            res.m = "Record not found";
+            res.r = {};
+            return res.sendResult();
+        }
+    }
+    catch(err)
+    {
+        console.log("Error in userAddContact:", err);
+        //_commonMethods.saveErrorLog(fileName,userAddContact.name,err.message,req);
         return next(new Error(err));
     }
 }
@@ -103,5 +130,6 @@ let userGetById = async (req, res, next) =>{
 export default
 {
     userEdit,
-    userGetById
+    userGetById,
+    userAddContact
 }
