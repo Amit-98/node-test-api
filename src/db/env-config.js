@@ -1,5 +1,8 @@
-const db_key = 'local'; // Default to development, can be overridden by environment variable
-const db_type = 'mysql'; // Default to mysql, mongodb can be used as well
-const PORT_CONFIG = db_key === "local" ? 3000 : 3001;
+import dotenv from 'dotenv';
+dotenv.config();
+
+const db_key = process.env.DB_KEY || 'local'; // 'local', 'development', 'production'
+const db_type = process.env.DB_TYPE || 'mysql'; // 'mysql', 'mongodb'
+const PORT_CONFIG = process.env.PORT ? Number(process.env.PORT) : (db_key === 'local' ? 3000 : 3001);
 
 export { db_key, PORT_CONFIG, db_type };

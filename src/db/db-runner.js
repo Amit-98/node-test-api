@@ -98,34 +98,46 @@ InsertQueryErrorLog = (_insertQuery) =>
 }
 else if(db_type === 'mongodb')
 {
-    // // MongoDB related code can be added here if needed
-    // query = () => {};
-    // insert = () => {};
-    // selectS = () => {};
-    // selectM = () => {};
-    // InsertQueryErrorLog = () => {};
-
-    query = (collection, filter, options, update, ) =>{
-
-    },
-
-  selectS = async (collection, filter, options) => 
-  {
-    console.log("COL",collection, "fil", filter, "opt", options);
-    const col = await pool.collection(collection); // Get collection reference
-    const cursor = await col.find(filter).toArray(); // Get cursor
-    if(cursor.length > 0)
-    { 
-      return cursor[0]; // Return first document
-    }
-    else
-    {
-      return null; // Return empty object if no document found
-    }
-  },
-  InsertQueryErrorLog = (_insertQuery) =>
-  {
+  // MongoDB insert / create function
+  query = async (collection, data) => {
+      try {
+          const col = pool.collection(collection);
+          const result = await col.insertOne(data);
+          return {
+              status: true,
+              insertId: result.insertedId,
+              data: result
+          };
+      } catch (error) {
+          console.error("MongoDB Insert Error:", error);
+          return {
+              status: false,
+              error: error.message
+          };
+      }
   };
+  insert = query; // insert bhi query ko point karega
+  selectS = async (collection, filter, options) => {
+      try {
+          const col = pool.collection(collection);
+          const doc = await col.findOne(filter);
+          return doc || null;
+      } catch (error) {
+          console.error("MongoDB Find Error:", error);
+          return null;
+      }
+  };
+  selectM = async (collection, filter, options) => {
+      try {
+          const col = pool.collection(collection);
+          const docs = await col.find(filter).toArray();
+          return docs;
+      } catch (error) {
+          console.error("MongoDB Find Error:", error);
+          return [];
+      }
+  };
+  InsertQueryErrorLog = (_insertQuery) => {};
 }
 export default {
   query,

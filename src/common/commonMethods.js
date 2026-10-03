@@ -95,27 +95,28 @@ export default
     return new Promise((resolve, reject) => 
     {
       const transporter = nodemailer.createTransport({
-        service: "gmail",
-        port: 587,
+        service: process.env.EMAIL_SERVICE || 'gmail',
+        port: process.env.EMAIL_PORT || 587,
+        secure: false,
         auth: {
-          user: `yadavamitay151@gmail.com`, // Use environment variables
-          pass: `ylasacsilofzwora`,
+          user: process.env.EMAIL_HOST_USER,
+          pass: process.env.EMAIL_HOST_PASSWORD,
         },
-        secure: false, // Use false for port 587
       });
 
-      transporter.sendMail(mailOptions, function (err, info) 
-      {
-        if (err) 
-        {
-          console.log("ERROR:", err);
-          reject(err);
-        } 
-        else 
-        {
-          //console.log("Email sent:", info.response);
-          resolve(true);
+      const options = {
+        from: `"Sigmaplex Technologies" <${process.env.EMAIL_HOST_USER || 'sigmaplextech@gmail.com'}>`,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+      };
+      transporter.sendMail(options, (err, info) => {
+        if (err) {
+          console.error("❌ Email sending failed:", err.message);
+          return reject(err);
         }
+        console.log(`✅ Email sent successfully to ${mailOptions.to}`);
+        resolve(info);
       });
     });
   },
