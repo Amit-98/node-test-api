@@ -99,7 +99,7 @@ const __dirname = path.dirname(__filename);
 app.use('/upload', express.static(path.join(__dirname, 'public/upload')));
 
 app.get('/', (req, res) => {
-  res.send("Hello world API");
+  res.send("Hello Sigmaplex API");
 });
 
 let resultHandler = (req, res, next) =>
