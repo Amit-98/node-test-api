@@ -118,6 +118,10 @@ app.use(resultHandler);
 
 app.use('/api', src, resultHandler, errorHandler);
 
-app.listen(PORT_CONFIG, ()=>{
-   console.log(`server is running on port ${PORT_CONFIG}`);
-})
+export default app;
+
+if (!process.env.NETLIFY && process.env.NODE_ENV !== 'production') {
+  app.listen(PORT_CONFIG, () => {
+    console.log(`Server is running on port ${PORT_CONFIG}`);
+  });
+}
