@@ -63,19 +63,37 @@ const mongodb_config = {
 
 let pool = null;
 
+const connectMongo = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    const config = mongodb_config[db_key] || mongodb_config.local;
+    return mongoose.connection.useDb(config.dbname);
+  }
+  const config = mongodb_config[db_key] || mongodb_config.local;
+  if (!config.uri) {
+    console.error("❌ MongoDB URI is not set in environment variables!");
+    return null;
+  }
+  await mongoose.connect(config.uri, config.options);
+  console.log(`✅ MongoDB connected successfully [Env: ${db_key}]`);
+  return mongoose.connection.useDb(config.dbname);
+};
+
 if (db_type === 'mysql') {
   const config = mysql_config[db_key] || mysql_config.local;
   pool = mysql.createPool(config);
   console.log(`✅ MySQL connected successfully [Env: ${db_key}]`);
 } else if (db_type === 'mongodb') {
-  const config = mongodb_config[db_key] || mongodb_config.local;
-  try {
-    await mongoose.connect(config.uri, config.options);
-    pool = mongoose.connection.useDb(config.dbname);
-    console.log(`✅ MongoDB connected successfully [Env: ${db_key}]`);
-  } catch (error) {
+  // Initiate connection in background without top-level await
+  connectMongo().catch((error) => {
     console.error(`❌ MongoDB connection error:`, error.message);
-  }
+  });
+
+  pool = {
+    collection: async (name) => {
+      const db = await connectMongo();
+      return db.collection(name);
+    }
+  };
 }
 
-export { pool };
+export { pool, connectMongo };

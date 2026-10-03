@@ -101,7 +101,7 @@ else if(db_type === 'mongodb')
   // MongoDB insert / create function
   query = async (collection, data) => {
       try {
-          const col = pool.collection(collection);
+          const col = await pool.collection(collection);
           const result = await col.insertOne(data);
           return {
               status: true,
@@ -119,7 +119,7 @@ else if(db_type === 'mongodb')
   insert = query; // insert bhi query ko point karega
   selectS = async (collection, filter, options) => {
       try {
-          const col = pool.collection(collection);
+          const col = await pool.collection(collection);
           const doc = await col.findOne(filter);
           return doc || null;
       } catch (error) {
@@ -129,7 +129,7 @@ else if(db_type === 'mongodb')
   };
   selectM = async (collection, filter, options) => {
       try {
-          const col = pool.collection(collection);
+          const col = await pool.collection(collection);
           const docs = await col.find(filter).toArray();
           return docs;
       } catch (error) {
@@ -138,6 +138,7 @@ else if(db_type === 'mongodb')
       }
   };
   InsertQueryErrorLog = (_insertQuery) => {};
+
 }
 export default {
   query,
