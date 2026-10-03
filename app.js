@@ -6,7 +6,6 @@ import { PORT_CONFIG } from './src/db/env-config.js';
 import Response from "./src/common/response/index.js";
 import { ErrorMsg } from './src/common/index.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 const app = express();
 
@@ -91,12 +90,8 @@ app.use(
   })
 );
 
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Serve static files from public/upload directory
-app.use('/upload', express.static(path.join(__dirname, 'public/upload')));
+app.use('/upload', express.static(path.join(process.cwd(), 'public/upload')));
 
 app.get('/', (req, res) => {
   res.send("Hello Sigmaplex API");
