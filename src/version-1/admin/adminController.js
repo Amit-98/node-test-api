@@ -11,22 +11,24 @@ const contactUs = async (req, res, next) => {
         // 1. Save data in MongoDB
         const result = await _queryBuilder.contactUs(req);
         console.log("MongoDB Save Result:", result);
+
         if (result && result.status) {
-            // 2. Send Emails Asynchronously (Save response will NOT be blocked)
-            (async () => {
-                try {
-                    // (A) Admin Notification Email
-                    const adminMail = _template.adminContactNotification(req.body);
-                    await _commonMethods.sendEmail(adminMail);
-                    // (B) User Auto-Reply Email (if valid email provided)
-                    if (req.body.email) {
-                        const userMail = _template.userAutoReply(req.body);
-                        await _commonMethods.sendEmail(userMail);
-                    }
-                } catch (emailErr) {
-                    console.error("Email Error (Background):", emailErr.message);
-                }
-            })();
+        // Emails bhejo (response se PEHLE)
+        try {
+            const adminMail = _template.adminContactNotification(req.body);
+            const tasks = [_commonMethods.sendEmail(adminMail)];
+
+            if (req.body.email) {
+            const userMail = _template.userAutoReply(req.body);
+            tasks.push(_commonMethods.sendEmail(userMail));
+            }
+
+            await Promise.all(tasks);
+            } catch (emailErr) {
+                // Email fail ho to bhi inquiry save ho chuki hai
+                console.error("Email Error:", emailErr.message);
+            }
+
             res.s = 1;
             res.m = "Inquiry submitted successfully. Confirmation email sent!";
             res.r = result?.data;
